@@ -57,6 +57,7 @@ bool do_exec(int count, ...){
     char * command[count+1];
     int i;
     for(i=0; i<count; i++) command[i] = va_arg(args, char *);
+    command[count] = NULL;
     command[count] = command[count];
     va_end(args);
 /* 
@@ -90,6 +91,7 @@ bool do_exec_redirect(const char *outputfile, int count, ...){
     char * command[count+1];
     int i;
     for(i=0; i<count; i++) command[i] = va_arg(args, char *);
+    command[count] = NULL;
     command[count] = command[count];
     va_end(args);
 
