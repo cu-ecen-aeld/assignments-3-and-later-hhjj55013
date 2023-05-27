@@ -1,14 +1,12 @@
+#include "systemcalls.h"
 #include <stdlib.h>
+#include <stdbool.h> 
+#include <sys/types.h>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <errno.h>
-#include <string.h> 
-#include "systemcalls.h"
-
 /**
  * @param cmd the command to execute with system()
  * @return true if the command in @param cmd was executed
@@ -16,25 +14,17 @@
  *   either in invocation of the system() call, or if a non-zero return
  *   value was returned by the command issued in @param cmd.
 */
-bool do_system(const char *cmd){
+bool do_system(const char *cmd)
+{
+
 /*
  * TODO  add your code here
  *  Call the system() function with the command set in the cmd
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
-    if (cmd==NULL) return false;
-    int status;	
-    int call= system(cmd) ;
-    waitpid(0,&status,0);
-    if (call==-1){
-        fprintf(stderr,"Error with child process %d : %s",errno,strerror(errno));
-        return false;
-    }else if (WIFEXITED(status) && WEXITSTATUS(status) == 127) {
-        fprintf(stderr, "Child shell terminated with status 127\n");
-        return false;
-    }
-    return true; 
+int t= system(cmd);
+    return ( t !=-1)?true:false; 
 }
 
 /**
@@ -51,16 +41,22 @@ bool do_system(const char *cmd){
 *   by the command issued in @param arguments with the specified arguments.
 */
 
-bool do_exec(int count, ...){
+bool do_exec(int count, ...)
+{
     va_list args;
     va_start(args, count);
     char * command[count+1];
     int i;
-    for(i=0; i<count; i++) command[i] = va_arg(args, char *);
+    for(i=0; i<count; i++)
+    {
+        command[i] = va_arg(args, char *);
+    }
     command[count] = NULL;
+    // this line is to avoid a compile warning before your implementation is complete
+    // and may be removed
     command[count] = command[count];
-    va_end(args);
-/* 
+
+/*
  * TODO:
  *   Execute a system command by calling fork, execv(),
  *   and wait instead of system (see LSP page 161).
@@ -69,15 +65,20 @@ bool do_exec(int count, ...){
  *   as second argument to the execv() command.
  *
 */
-	pid_t pid = fork();
-	if (pid==-1){
-		perror("Error in fork creation");
-		return false;
-	}else if (pid==0) execv(command[0],command);
-	int status;
-	wait(&status);
-	if (WIFEXITED(status) && EXIT_FAILURE == WEXITSTATUS(status)) return false;
-	return true;
+    int status;
+    int pid=fork();
+    if(pid==-1){
+    return false;
+    }
+    else if(pid==0){
+    execv(command[0], command);
+    exit(1);
+    }
+    else if (waitpid (pid, &status, 0) == -1||WEXITSTATUS(status)!=0){return false;}
+
+    va_end(args);
+
+    return true;
 }
 
 /**
@@ -85,15 +86,21 @@ bool do_exec(int count, ...){
 *   This file will be closed at completion of the function call.
 * All other parameters, see do_exec above
 */
-bool do_exec_redirect(const char *outputfile, int count, ...){
+bool do_exec_redirect(const char *outputfile, int count, ...)
+{
     va_list args;
     va_start(args, count);
     char * command[count+1];
     int i;
-    for(i=0; i<count; i++) command[i] = va_arg(args, char *);
+    for(i=0; i<count; i++)
+    {
+        command[i] = va_arg(args, char *);
+    }
     command[count] = NULL;
+    // this line is to avoid a compile warning before your implementation is complete
+    // and may be removed
     command[count] = command[count];
-    va_end(args);
+
 
 /*
  * TODO
@@ -102,27 +109,21 @@ bool do_exec_redirect(const char *outputfile, int count, ...){
  *   The rest of the behaviour is same as do_exec()
  *
 */
-
+int pid = fork();
+int status;
 int fd = open(outputfile, O_WRONLY|O_TRUNC|O_CREAT, 0644);
-    if (fd < 0) { 
-        perror("file open err"); 
-        return false;
-    }
-    pid_t pid = fork();
-	if (pid==-1){
-		perror("Error in fork creation");
-		return false;
-	}else if (pid==0){
-		if (dup2(fd, 1) < 0) {
-			perror("dup2");             
-			abort(); 
-		}
-    	close(fd);
-	 	execv(command[0],command);
-	}
-	int status;
-	wait(&status);
-	close(fd);
-	if (WIFEXITED(status) && EXIT_FAILURE == WEXITSTATUS(status)) return false;
-	return true;
+if (fd < 0) { return false; }
+switch (pid) {
+  case -1: return false;
+  case 0:
+    if (dup2(fd, 1) < 0) {  return false; }
+    close(fd);
+    execvp(command[0], command);  return false;
+  default:
+    close(fd);
+    wait(&status);
+}
+    va_end(args);
+
+    return true;
 }
