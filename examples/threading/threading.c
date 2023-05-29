@@ -8,11 +8,11 @@
 //#define DEBUG_LOG(msg,...) printf("threading: " msg "\n" , ##__VA_ARGS__)
 #define ERROR_LOG(msg,...) printf("threading ERROR: " msg "\n" , ##__VA_ARGS__)
 
-void* threadfunc(void* thread_param){
+void* threadfunc(void* thread_param)
+{
 
     // TODO: wait, obtain mutex, wait, release mutex as described by thread_data structure
     // hint: use a cast like the one below to obtain thread arguments from your parameter
-    //struct thread_data* thread_func_args = (struct thread_data *) thread_param;
     struct thread_data* thread_func_args = (struct thread_data *) thread_param;
 
     // wait
@@ -37,6 +37,7 @@ void* threadfunc(void* thread_param){
         return thread_param;
     }
 
+    
     thread_func_args->thread_complete_success = true;
     return thread_param;
 }
@@ -52,6 +53,7 @@ bool start_thread_obtaining_mutex(pthread_t *thread, pthread_mutex_t *mutex,int 
      *
      * See implementation details in threading.h file comment block
      */
+     
     // allocate memory for thread_data
     struct thread_data* thread_func_args = malloc(sizeof(struct thread_data));
     
@@ -67,6 +69,6 @@ bool start_thread_obtaining_mutex(pthread_t *thread, pthread_mutex_t *mutex,int 
         ERROR_LOG("Failed to create thread with %d\n", rc);
         return false;
     }
+    
     return true;
 }
-
