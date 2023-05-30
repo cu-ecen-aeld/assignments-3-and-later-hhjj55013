@@ -9,7 +9,7 @@ NUMFILES=10
 #OUTDIR=/tmp/assignment-4-result.txt
 WRITESTR=AELD_IS_FUN
 WRITEDIR=/tmp/aeld-data
-username=$(cat ./conf/username.txt)
+username="hhjj55013"
 
 if [ $# -lt 3 ]
 then
